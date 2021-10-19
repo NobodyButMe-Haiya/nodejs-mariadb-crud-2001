@@ -1,14 +1,19 @@
-import express from 'express';
-import mariadb from 'mariadb';
+const express = require('express'); // not working import express from 'express';
+const mariadb = require('mariadb'); // not working import mariadb from 'mariadb';
+const _ = require('lodash');
 
-var host = "locahost";
+var host = "localhost";
 var user = "youtuber";
 var database = "youtuber";
-var password = "123456;"
-express().listen(3000).post('/', (request, response) => {
-  // @dynamic request.param.method(variable outside) 
-
-  switch (request.param.method) {
+var password = "123456";
+var app = express();
+// form data issue ? 
+app.use(express.urlencoded({ extended: true }))
+app.listen(3000);
+app.post('/', (request, response) => {
+  var x = request.body;
+  console.log(x);
+  switch (request.body.mode) {
     case "create":
       mariadb.createConnection({
         host: host,
@@ -21,7 +26,7 @@ express().listen(3000).post('/', (request, response) => {
             .then(() => {
               // unsure it will work 
               // using bind parameter
-              conn.query("INSERT INTO person (name,age) VALUES (?,?) ", [request.param.name, request.param.age]);
+              conn.query("INSERT INTO person (name,age) VALUES (?,?) ", [request.body.name, request.body.age]);
 
             })
             .then(() => {
@@ -37,6 +42,7 @@ express().listen(3000).post('/', (request, response) => {
         });
       break;
     case "read":
+      var result = "";
       mariadb.createConnection({
         host: host,
         database: database,
@@ -44,18 +50,13 @@ express().listen(3000).post('/', (request, response) => {
         password: password
       })
         .then(conn => {
-          conn.beginTransaction()
-            .then(() => {
-
-              // unsure it will work 
-              // using bind parameter
-              var result = conn.query("SELECT * FROM person ");
-              _.difference(result ['meta']);
-              response.status(200).json({"status":true,"data":result});   
-            })
-            .catch((err) => {
-              conn.rollback();
-            })
+          result = conn.query("SELECT * FROM person ");
+          console.log(result);
+          _.difference(result['meta']);
+          return result;
+        }).then((result) => {
+          console.log("complete")
+          response.status(200).json({ "status": true, "a": "3", "data": result });
         })
         .catch(err => {
           response.status(200).json({ "status": false, "message": err.message });
@@ -73,12 +74,12 @@ express().listen(3000).post('/', (request, response) => {
             .then(() => {
               // unsure it will work 
               // using bind parameter
-              conn.query("UPDATE person SET name=? , age=? WHERE personId = ?  ", [request.param.name, request.param.age, request.param.personId]);
+              conn.query("UPDATE person SET name=? , age=? WHERE personId = ?  ", [request.body.name, request.body.age, request.body.personId]);
 
             })
             .then(() => {
               conn.commit();
-              response.status(200).json({ "status": true, "message": "record inserted" });
+              response.status(200).json({ "status": true, "message": "record updated" });
             })
             .catch((err) => {
               conn.rollback();
@@ -100,12 +101,12 @@ express().listen(3000).post('/', (request, response) => {
             .then(() => {
               // unsure it will work 
               // using bind parameter
-              conn.query("DELETE FROM person WHERE personId = ? ", [request.param.personId]);
+              conn.query("DELETE FROM person WHERE personId = ? ", [request.body.personId]);
 
             })
             .then(() => {
               conn.commit();
-              response.status(200).json({ "status": true, "message": "record inserted" });
+              response.status(200).json({ "status": true, "message": "record deleted" });
             })
             .catch((err) => {
               conn.rollback();
@@ -115,7 +116,9 @@ express().listen(3000).post('/', (request, response) => {
           response.status(200).json({ "status": false, "message": err.message });
         });
       break;
+    default:
+      response.status(200).json({ "status": false, "message": "something wrong with routing " });
+      break;
   }
-  response.send("idiot");
 });
 
