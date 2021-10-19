@@ -46,14 +46,12 @@ express().listen(3000).post('/', (request, response) => {
         .then(conn => {
           conn.beginTransaction()
             .then(() => {
+
               // unsure it will work 
               // using bind parameter
-              conn.query("INSERT INTO person (name,age) VALUES (?,?) ", [request.param.name, request.param.age]);
-
-            })
-            .then(() => {
-              conn.commit();
-              response.status(200).json({ "status": true, "message": "record inserted" });
+              var result = conn.query("SELECT * FROM person ");
+              _.difference(result ['meta']);
+              response.status(200).json({"status":true,"data":result});   
             })
             .catch((err) => {
               conn.rollback();
