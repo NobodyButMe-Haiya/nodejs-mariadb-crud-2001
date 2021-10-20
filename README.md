@@ -1,6 +1,6 @@
 this is stable version 
 
-this is sample node.js with mariadb with crud(create , read , update, delete) functionality . 
+this is sample node.js expressjs, mariadb with crud(create , read , update, delete) functionality . 
 
 nodejs doesn't support form-data , normal form-urlencode can .. 
 
