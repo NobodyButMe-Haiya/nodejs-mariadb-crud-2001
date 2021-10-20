@@ -12,7 +12,6 @@ app.use(express.urlencoded({ extended: true }))
 app.listen(3000);
 app.post('/', (request, response) => {
   var x = request.body;
-  console.log(x);
   switch (request.body.mode) {
     case "create":
       mariadb.createConnection({
